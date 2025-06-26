@@ -1,0 +1,75 @@
+
+flowchart TD
+    Start([Customer wants to book venue]) --> Search[Search venues with filters<br/>location, date, capacity, price]
+    
+    Search --> HasResults{Venues found?}
+    
+    HasResults -->|No| UpdateFilters[Update search filters]
+    UpdateFilters --> Search
+    
+    HasResults -->|Yes| ViewResults[Browse venue results]
+    ViewResults --> SelectVenue[Select specific venue]
+    
+    SelectVenue --> ViewDetails[View venue details<br/>photos, pricing, capacity]
+    ViewDetails --> CheckAvailability[Check real-time availability<br/>for desired date]
+    
+    CheckAvailability --> IsAvailable{Date available?}
+    
+    IsAvailable -->|No| ChooseDate{Choose different date?}
+    ChooseDate -->|Yes| CheckAvailability
+    ChooseDate -->|No| ViewResults
+    
+    IsAvailable -->|Yes| AddToCart[Click Add to Cart for venue]
+    AddToCart --> GetEvents[Get customer events list]
+    GetEvents --> HasExistingEvents{Has existing events?}
+    
+    HasExistingEvents -->|Yes| ShowEventDialog[Show event selection dialog]
+    ShowEventDialog --> ChooseExisting[Choose existing event from list]
+    ChooseExisting --> LinkVenue[Link venue to selected event]
+    
+    HasExistingEvents -->|No| AutoCreateEvent[Automatically create first event<br/>with venue information]
+    
+    LinkVenue --> AddVenueToCart[Add venue to cart with event ID]
+    AutoCreateEvent --> AddVenueToCart
+    
+    AddVenueToCart --> CartUpdated[Show Added to Cart message<br/>Cart icon updated]
+    CartUpdated --> ContinueShopping{Continue shopping<br/>for services?}
+    
+    ContinueShopping -->|Yes| AddServices[Browse and add services<br/>to cart for event]
+    AddServices --> ContinueShopping
+    
+    ContinueShopping -->|No| GoToCart[Go to Cart & Checkout]
+    GoToCart --> ViewCart[Display cart with all<br/>venues & services]
+    
+    ViewCart --> ReviewCart{Review cart items?}
+    ReviewCart -->|Modify| ModifyCart[Modify cart items]
+    ModifyCart --> ViewCart
+    
+    ReviewCart -->|Proceed| ProceedCheckout[Proceed to checkout]
+    ProceedCheckout --> ProcessPayment[Process payment for<br/>total cart amount]
+    
+    ProcessPayment --> PaymentResult{Payment successful?}
+    
+    PaymentResult -->|No| PaymentError[Display payment error]
+    PaymentError --> RetryPayment{Retry payment?}
+    RetryPayment -->|Yes| ProcessPayment
+    RetryPayment -->|No| CartPreserved[Cart preserved for later]
+    CartPreserved --> End1([End - Payment cancelled])
+    
+    PaymentResult -->|Yes| ConfirmBookings[Update all bookings to Confirmed]
+    ConfirmBookings --> ClearCart[Clear customer cart]
+    ClearCart --> SendNotifications[Send booking confirmations<br/>to customer and vendors]
+    SendNotifications --> ShowConfirmation[Display booking confirmation<br/>for all items]
+    ShowConfirmation --> Success([End - All items successfully booked])
+    
+    style Start fill:#90EE90
+    style Success fill:#90EE90
+    style End1 fill:#FFB6C1
+    style HasResults fill:#FFE4B5
+    style IsAvailable fill:#FFE4B5
+    style ChooseDate fill:#FFE4B5
+    style HasExistingEvents fill:#FFE4B5
+    style ContinueShopping fill:#FFE4B5
+    style ReviewCart fill:#FFE4B5
+    style PaymentResult fill:#FFE4B5
+    style RetryPayment fill:#FFE4B5 
