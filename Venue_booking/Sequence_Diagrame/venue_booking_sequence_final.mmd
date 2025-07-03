@@ -1,111 +1,61 @@
 sequenceDiagram
-    participant C as Customer
     participant UI as Frontend UI
     participant API as Backend API
     participant DB as Database
-    participant Cart as Cart Service
-    participant PG as Payment Gateway
-    participant VO as Venue Owner
-    participant NS as Notification Service
+    participant Payment as Payment Service
+    participant Notification as Notification Service
 
-    Note over C,NS: New Venue Booking Process with Cart & Event Management
+    Note over UI,Notification: Venue Booking System - Design Level
 
-    C->>UI: Search for venues with filters
-    UI->>API: GET /venues?location=X&date=Y&capacity=Z
-    API->>DB: Query available venues
-    DB-->>API: Return venue list
-    API-->>UI: Send venue results
-    UI-->>C: Display venue options
-
-    C->>UI: Select specific venue
-    UI->>API: GET /venue/{id}/details
-    API->>DB: Fetch venue details & availability
-    DB-->>API: Return venue info
-    API-->>UI: Send venue details
-    UI-->>C: Show venue details page
-
-    C->>UI: Check real-time availability for date
-    UI->>API: GET /venue/{id}/availability?date=X
-    API->>DB: Check date availability
-    DB-->>API: Confirm availability status
-    API-->>UI: Return availability
-    UI-->>C: Display available time slots
-
-    C->>UI: Click "Add to Cart" for venue
-    UI->>API: GET /customer/{id}/events
-    API->>DB: Get customer events (existing or empty list)
-    DB-->>API: Return events list
+    UI->>API: Search venues (location, date, capacity)
+    API->>DB: Query venue database
+    DB-->>API: Return results
     
-    alt Customer has existing events
-        API-->>UI: Return existing events
-        UI-->>C: Show event selection dialog
-        C->>UI: Choose existing event from list
-        UI->>API: POST /events/{eventId}/add-venue
-        API->>DB: Link venue to selected event
-        Note over API,DB: Venue linked to existing event
-         
-    else No existing events
-        API->>DB: Auto-create first event with venue info
-        DB-->>API: Return new event ID
-        API-->>UI: Event auto-created confirmation
-        Note over API,DB: Event automatically created
-    end
-
-    API->>Cart: POST /cart/add-venue
-    Note over Cart: Add venue to cart with event ID
-    Cart->>DB: Store cart item (venue + event)
-    DB-->>Cart: Cart item saved
-    Cart-->>API: Venue added to cart
-    API-->>UI: Cart updated confirmation
-    UI-->>C: Show "Added to Cart" message + Cart icon update
-
-    Note over C,NS: Customer continues shopping for services
-
-    C->>UI: Go to Cart & Checkout
-    UI->>Cart: GET /cart/{customerId}
-    Cart->>DB: Retrieve all cart items
-    DB-->>Cart: Return cart contents
-    Cart-->>UI: Send cart summary
-    UI-->>C: Display cart with all venues & services
-
-    C->>UI: Proceed to checkout
-    UI->>API: POST /checkout/process-cart
-    API->>DB: Create pending bookings for all cart items
-    DB-->>API: Pending bookings created
-    
-    API->>PG: Process payment for total cart amount
-    PG-->>API: Payment confirmation/failure
-    
-    alt Payment Successful
-        API->>DB: Update all bookings status to "Confirmed"
-        DB-->>API: All bookings confirmed
+    alt Results found
+        Note over UI,DB: Found Results Flow
+        API-->>UI: Display venue list
+        UI->>API: Receive venue selection (venue_id)
+        API->>DB: Check venue availability (venue_id, date)
+        DB-->>API: Return availability status
         
-        API->>Cart: POST /cart/clear
-        Cart->>DB: Clear customer cart
+        alt Available
+            Note over UI,Payment: Available Venue Flow
+            API-->>UI: Receive add to cart request (venue_id, date)
+            API->>DB: Check customer events (customer_id)
+            DB-->>API: Return events status
+            
+            alt Events exist
+                Note over UI,DB: Existing Events Flow
+                API-->>UI: Display events
+                UI->>API: Receive event choice (event_id)
+                API->>DB: Link venue to event (venue_id, event_id)
+            else Events not found
+                Note over UI,UI: No Events Flow
+                API-->>UI: Display Events not found
+            end
+            
+            DB-->>API: Venue linked
+            API-->>UI: Display cart
+            UI->>API: Process payment (total_amount)
+            API->>Payment: Process payment (amount, customer_id)
+            Payment-->>API: Return payment result
+            
+            alt Payment successful
+                Note over API,Notification: Success Flow
+                API->>DB: Confirm all bookings (booking_ids)
+                API->>Notification: Send confirmations (customer_email, booking_details)
+                API-->>UI: Booking complete
+            else Payment error
+                Note over API,UI: Error Flow
+                API-->>UI: Display Payment error
+            end
+            
+        else Not available
+            Note over API,UI: Unavailable Flow
+            API-->>UI: Display alternative dates
+        end
         
-        API->>NS: Send booking confirmations
-        NS->>C: Email confirmation with all bookings
-        NS->>VO: Booking notifications to all vendors
-        
-        API-->>UI: Checkout success response
-        UI-->>C: Display booking confirmation for all items
-        
-        Note over C,VO: All Cart Items Successfully Booked
-        
-    else Payment Failed
-        API->>DB: Update all bookings status to "Failed"
-        DB-->>API: Status updated
-        API-->>UI: Payment failure response
-        UI-->>C: Display payment error message
-        
-        Note over C,UI: Cart preserved - Customer can retry
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
-// [MermaidChart: a537985e-2a0d-4b2e-ae53-c4603e8af0cb]
+    else No results
+        Note over API,UI: No Results Flow
+        API-->>UI: Display No results found
     end 
