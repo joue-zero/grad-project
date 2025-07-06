@@ -1,0 +1,171 @@
+classDiagram
+    direction TB
+    
+    %% =============== PART 2C: BUSINESS LOGIC MODULE ===============
+
+    %% -------------- Core References (External) --------------
+    class User_model {
+        +id : integer
+        +name : string
+        +email : string
+    }
+
+    class Event_model {
+        +id : integer
+        +user_id : foreignId
+        +name : string
+        +date : date
+    }
+
+    class Service_model {
+        +id : integer
+        +name : string
+        +base_price : decimal
+    }
+
+    %% -------------- Shopping & Booking Models (Database Entities) --------------
+    class Cart_model {
+        +id : integer
+        +user_id : foreignId
+        +total_amount : decimal
+        +created_at : timestamp
+        +updated_at : timestamp
+        +addItem(serviceId, eventId, quantity)
+        +removeItem(cartItemId)
+        +clear()
+        +calculateTotal()
+    }
+
+    class CartItem_model {
+        +id : integer
+        +cart_id : foreignId
+        +service_id : foreignId
+        +event_id : foreignId
+        +quantity : integer
+        +price : decimal
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class Booking_model {
+        +id : integer
+        +user_id : foreignId
+        +event_id : foreignId
+        +booking_reference : string
+        +total_amount : decimal
+        +status : enum
+        +booking_date : date
+        +created_at : timestamp
+        +updated_at : timestamp
+        +confirm()
+        +cancel()
+        +complete()
+        +generateReference()
+    }
+
+    class BookedItem_model {
+        +id : integer
+        +booking_id : foreignId
+        +service_id : foreignId
+        +quantity : integer
+        +final_price : decimal
+        +service_date : date
+        +start_time : time
+        +end_time : time
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    %% -------------- Service Layer Classes --------------
+    class CartService {
+        +getCart(userId)
+        +addItemToCart(userId, serviceId, eventId, quantity)
+        +removeItemFromCart(userId, cartItemId)
+        +updateCartItem(cartItemId, quantity)
+        +clearCart(userId)
+        +calculateCartTotal(cartId)
+        +validateCartItems(cartId)
+        +getCartItems(cartId)
+    }
+
+    class BookingService {
+        +processCartCheckout(cartId)
+        +createBooking(bookingData)
+        +confirmBooking(bookingId)
+        +cancelBooking(bookingId)
+        +completeBooking(bookingId)
+        +getBooking(bookingId)
+        +getUserBookings(userId)
+        +generateBookingReference()
+        +notifyObservers(booking, event)
+        +updateBookingStatus(bookingId, status)
+    }
+
+    class NotificationService {
+        +sendBookingConfirmation(booking)
+        +sendPaymentConfirmation(payment)
+        +sendCancellationNotice(booking)
+        +sendReminderNotification(booking)
+        +addObserver(observer)
+        +removeObserver(observer)
+        +notifyObservers(event, data)
+    }
+
+    %% -------------- Observer Pattern for Notifications --------------
+    class BookingObserver {
+        <<interface>>
+        +onBookingConfirmed(booking)
+        +onBookingCancelled(booking)
+        +onPaymentCompleted(payment)
+        +onBookingReminder(booking)
+    }
+
+    class EmailNotificationObserver {
+        +onBookingConfirmed(booking)
+        +onBookingCancelled(booking)
+        +onPaymentCompleted(payment)
+        +onBookingReminder(booking)
+        +sendEmail(recipient, template, data)
+    }
+
+    class SmsNotificationObserver {
+        +onBookingConfirmed(booking)
+        +onBookingCancelled(booking)
+        +onPaymentCompleted(payment)
+        +onBookingReminder(booking)
+        +sendSms(phoneNumber, message)
+    }
+
+    %% =============== RELATIONSHIPS ===============
+
+    %% Model Relationships
+    User_model "1" --> "1" Cart_model : "has one"
+    User_model "1" --> "*" Booking_model : "makes"
+    Cart_model "1" --> "*" CartItem_model : "contains"
+    CartItem_model --> Service_model : "references"
+    CartItem_model --> Event_model : "for event"
+    Booking_model "1" --> "*" BookedItem_model : "contains"
+    BookedItem_model --> Service_model : "books"
+
+    %% Service Layer Dependencies
+    CartService ..> Cart_model : "manages"
+    CartService ..> CartItem_model : "manages"
+    BookingService ..> Booking_model : "manages"
+    BookingService ..> BookedItem_model : "manages"
+    BookingService ..> CartService : "uses"
+
+    %% Observer Pattern Relationships
+    BookingService ..> BookingObserver : "notifies"
+    NotificationService ..> BookingObserver : "manages"
+    BookingObserver <|.. EmailNotificationObserver : "implements"
+    BookingObserver <|.. SmsNotificationObserver : "implements"
+
+    %% Business Logic Dependencies
+    BookingService ..> NotificationService : "uses"
+
+    %% =============== NOTES ===============
+    note for Cart_model "Shopping cart system for multiple services"
+    note for Booking_model "Unified booking system for all services"
+    note for CartService "Business logic for cart operations"
+    note for BookingService "Core business logic for booking operations"
+    note for BookingObserver "Observer pattern for flexible notification system" 

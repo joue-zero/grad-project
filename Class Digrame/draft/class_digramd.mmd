@@ -1,0 +1,112 @@
+classDiagram
+  direction LR
+
+  %% ========= DOMAIN ENTITIES =========
+  class User {
+    +id: int
+    +name: string
+    +email: string
+    +phone: string
+  }
+  class Customer { +loyaltyPoints: int }
+  User <|-- Customer
+
+  class Vendor {
+    +companyName: string
+    +address: Address
+  }
+  User <|-- Vendor
+
+  class Venue {
+    +id: int
+    +name: string
+    +location: Address
+    +capacity: int
+    +basePrice: Money
+  }
+
+  class Service {
+    +id: int
+    +name: string
+    +category: string
+    +price: Money
+  }
+
+  class Event {
+    +id: int
+    +name: string
+    +date: LocalDate
+    +guestCount: int
+    +status: string
+  }
+  Customer "1" --> "*" Event : owns
+
+  class Booking {
+    +id: int
+    +bookingDate: LocalDate
+    +amount: Money
+    +status: string
+  }
+  Event "1" --> "*" Booking : aggregates
+  Booking --> Venue
+  Booking --> Service
+
+  class Payment { +id: int +amount: Money +status: string }
+  Booking "1" --> "1" Payment : paidVia
+
+  %% ========= VALUE OBJECTS =========
+  class Address { +street: string +city: string +country: string }
+  class Money   { +value: decimal +currency: string }
+
+  %% ========= REPOSITORIES (Interfaces) =========
+  class IUserRepository {
+    <<interface>>
+    +findById()
+    +save()
+  }
+  class IEventRepository {
+    <<interface>>
+    +findById()
+    +save()
+  }
+  class IBookingRepository {
+    <<interface>>
+    +findByEvent()
+    +save()
+  }
+
+  %% ========= SERVICES =========
+  class BookingService { +createBooking() }
+  BookingService ..> IBookingRepository
+  BookingService ..> IEventRepository
+  BookingService ..> IPricingStrategy
+  BookingService ..> IPaymentGateway
+
+  %% ========= STRATEGY – Pricing =========
+  class IPricingStrategy {
+    <<interface>>
+    +calculatePrice()
+  }
+  class StandardPricingStrategy { +calculatePrice() }
+  class HolidayPricingStrategy  { +calculatePrice() }
+  IPricingStrategy <|.. StandardPricingStrategy
+  IPricingStrategy <|.. HolidayPricingStrategy
+
+  %% ========= STRATEGY – Payment =========
+  class IPaymentGateway {
+    <<interface>>
+    +pay()
+  }
+  class StripeGateway { +pay() }
+  class PayPalGateway { +pay() }
+  IPaymentGateway <|.. StripeGateway
+  IPaymentGateway <|.. PayPalGateway
+  Payment ..> IPaymentGateway : processedBy
+
+  %% ========= CONTROLLER LAYER =========
+  class BookingController { +bookVenue() }
+  BookingController ..> BookingService
+
+  %% ========= FACTORY =========
+  class BookingFactory { +create() }
+  BookingService ..> BookingFactory

@@ -1,0 +1,175 @@
+classDiagram
+    direction TB
+    
+    %% =============== PART 1: CORE EVENT PLANNING SYSTEM ===============
+
+    %% -------------- Core Event Entity --------------
+    class Event_model {
+        +id : integer
+        +user_id : foreignId
+        +name : string
+        +date : date
+        +guest_count : integer
+        +status : enum
+        +budget : decimal
+        +created_at : timestamp
+        +updated_at : timestamp
+        +createWebsite()
+        +calculateBudgetStatus()
+    }
+
+    %% -------------- Event Planning Tools --------------
+    class TodoItem_model {
+        +id : integer
+        +event_id : foreignId
+        +title : string
+        +description : text
+        +is_completed : boolean
+        +due_date : date
+        +priority : enum
+        +assigned_to : string
+        +created_at : timestamp
+        +updated_at : timestamp
+        +markCompleted()
+    }
+
+    class Timeline_model {
+        +id : integer
+        +event_id : foreignId
+        +milestone_name : string
+        +milestone_date : date
+        +description : text
+        +is_completed : boolean
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class Invitation_model {
+        +id : integer
+        +event_id : foreignId
+        +guest_name : string
+        +guest_email : string
+        +guest_phone : string
+        +invitation_code : string
+        +status : enum
+        +sent_at : timestamp
+        +responded_at : timestamp
+        +response : enum
+        +plus_one_allowed : boolean
+        +dietary_restrictions : text
+        +created_at : timestamp
+        +updated_at : timestamp
+        +send()
+        +generateCode()
+    }
+
+    %% -------------- Website System --------------
+    class EventWebsite_model {
+        +id : integer
+        +event_id : foreignId
+        +template_id : foreignId
+        +subdomain : string
+        +title : string
+        +welcome_message : text
+        +theme_color : string
+        +background_image : string
+        +custom_css : text
+        +is_published : boolean
+        +rsvp_enabled : boolean
+        +rsvp_deadline : datetime
+        +password_protected : boolean
+        +access_password : string
+        +view_count : integer
+        +created_at : timestamp
+        +updated_at : timestamp
+        +publish()
+        +generateUrl()
+    }
+
+    class WebsiteTemplate_model {
+        +id : integer
+        +name : string
+        +description : text
+        +preview_image : string
+        +html_template : text
+        +css_template : text
+        +js_template : text
+        +is_premium : boolean
+        +category : string
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class RsvpResponse_model {
+        +id : integer
+        +website_id : foreignId
+        +invitation_id : foreignId
+        +guest_name : string
+        +guest_email : string
+        +response_status : enum
+        +plus_one_count : integer
+        +dietary_restrictions : text
+        +special_requests : text
+        +submitted_at : timestamp
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class WebsiteCustomization_model {
+        +id : integer
+        +website_id : foreignId
+        +section_name : string
+        +content : text
+        +is_visible : boolean
+        +sort_order : integer
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    %% -------------- Budget Management --------------
+    class BudgetItem_model {
+        +id : integer
+        +event_id : foreignId
+        +category : string
+        +item_name : string
+        +estimated_cost : decimal
+        +actual_cost : decimal
+        +is_paid : boolean
+        +vendor : string
+        +notes : text
+        +created_at : timestamp
+        +updated_at : timestamp
+        +calculateVariance()
+    }
+
+    class BudgetCategory_model {
+        +id : integer
+        +name : string
+        +description : text
+        +default_percentage : decimal
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    %% =============== RELATIONSHIPS ===============
+
+    %% Core Event Relationships
+    Event_model "1" --> "*" TodoItem_model : "has many"
+    Event_model "1" --> "*" Timeline_model : "has many"
+    Event_model "1" --> "*" Invitation_model : "has many"
+    Event_model "1" --> "1" EventWebsite_model : "has one"
+    Event_model "1" --> "*" BudgetItem_model : "has many"
+
+    %% Website System Relationships
+    EventWebsite_model --> WebsiteTemplate_model : "uses"
+    EventWebsite_model "1" --> "*" RsvpResponse_model : "has many"
+    EventWebsite_model "1" --> "*" WebsiteCustomization_model : "has many"
+    Invitation_model "1" --> "*" RsvpResponse_model : "has many"
+
+    %% Budget Relationships
+    BudgetItem_model --> BudgetCategory_model : "belongs to"
+
+    %% =============== NOTES ===============
+    note for Event_model "Core entity organizing all event-related data"
+    note for EventWebsite_model "CMS functionality with custom domains"
+    note for BudgetItem_model "Financial planning and expense tracking" 

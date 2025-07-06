@@ -1,0 +1,171 @@
+classDiagram
+    direction TB
+    
+    %% =============== EVENT PLANNING SERVICES (BUSINESS LOGIC LAYER) ===============
+
+    %% -------------- Core References (External Models) --------------
+    class Event_model {
+        +id : integer
+        +user_id : foreignId
+        +name : string
+        +date : date
+        +guest_count : integer
+        +status : enum
+        +budget : decimal
+    }
+
+    class TodoItem_model {
+        +id : integer
+        +event_id : foreignId
+        +title : string
+        +is_completed : boolean
+        +due_date : date
+        +priority : enum
+    }
+
+    class Timeline_model {
+        +id : integer
+        +event_id : foreignId
+        +milestone_name : string
+        +milestone_date : date
+        +is_completed : boolean
+    }
+
+    class Invitation_model {
+        +id : integer
+        +event_id : foreignId
+        +guest_name : string
+        +guest_email : string
+        +invitation_code : string
+        +status : enum
+    }
+
+    class EventWebsite_model {
+        +id : integer
+        +event_id : foreignId
+        +template_id : foreignId
+        +subdomain : string
+        +is_published : boolean
+    }
+
+    class BudgetItem_model {
+        +id : integer
+        +event_id : foreignId
+        +category : string
+        +item_name : string
+        +estimated_cost : decimal
+        +actual_cost : decimal
+    }
+
+    %% -------------- Service Layer Classes --------------
+    class EventManagementService {
+        +createEvent(eventData)
+        +updateEvent(eventId, data)
+        +deleteEvent(eventId)
+        +getEvent(eventId)
+        +getUserEvents(userId)
+        +changeEventStatus(eventId, status)
+        +calculateBudgetStatus(eventId)
+        +duplicateEvent(eventId)
+        +getEventStatistics(eventId)
+    }
+
+    class TodoManagementService {
+        +createTodoItem(eventId, todoData)
+        +updateTodoItem(todoId, data)
+        +deleteTodoItem(todoId)
+        +getTodoItem(todoId)
+        +getEventTodos(eventId)
+        +markTodoCompleted(todoId)
+        +markTodoIncomplete(todoId)
+        +getTodosByPriority(eventId, priority)
+        +getOverdueTodos(eventId)
+    }
+
+    class TimelineManagementService {
+        +createMilestone(eventId, milestoneData)
+        +updateMilestone(milestoneId, data)
+        +deleteMilestone(milestoneId)
+        +getMilestone(milestoneId)
+        +getEventTimeline(eventId)
+        +markMilestoneCompleted(milestoneId)
+        +getUpcomingMilestones(eventId)
+        +generateTimelineReport(eventId)
+    }
+
+    class InvitationManagementService {
+        +createInvitation(eventId, invitationData)
+        +updateInvitation(invitationId, data)
+        +deleteInvitation(invitationId)
+        +getInvitation(invitationId)
+        +getEventInvitations(eventId)
+        +sendInvitation(invitationId)
+        +resendInvitation(invitationId)
+        +generateInvitationCode(invitationId)
+        +bulkCreateInvitations(eventId, guestList)
+        +getInvitationStatistics(eventId)
+    }
+
+    class WebsiteManagementService {
+        +createEventWebsite(eventId, websiteData)
+        +updateEventWebsite(websiteId, data)
+        +deleteEventWebsite(websiteId)
+        +getEventWebsite(websiteId)
+        +publishWebsite(websiteId)
+        +unpublishWebsite(websiteId)
+        +customizeWebsite(websiteId, customizations)
+        +generateWebsiteUrl(websiteId)
+        +getWebsiteAnalytics(websiteId)
+    }
+
+    class BudgetManagementService {
+        +createBudgetItem(eventId, budgetData)
+        +updateBudgetItem(budgetItemId, data)
+        +deleteBudgetItem(budgetItemId)
+        +getBudgetItem(budgetItemId)
+        +getEventBudget(eventId)
+        +calculateBudgetTotal(eventId)
+        +calculateBudgetVariance(eventId)
+        +markBudgetItemPaid(budgetItemId)
+        +getBudgetReport(eventId)
+        +getBudgetByCategory(eventId, category)
+    }
+
+    %% -------------- Facade Pattern --------------
+    class EventPlanningFacade {
+        +createCompleteEvent(eventData)
+        +getEventDashboard(eventId)
+        +getEventProgress(eventId)
+        +finalizeEvent(eventId)
+        +generateEventReport(eventId)
+        +cloneEvent(eventId)
+        +archiveEvent(eventId)
+        +getEventOverview(eventId)
+    }
+
+    %% =============== RELATIONSHIPS ===============
+
+    %% Service Layer Dependencies on Models
+    EventManagementService ..> Event_model : "manages"
+    TodoManagementService ..> TodoItem_model : "manages"
+    TimelineManagementService ..> Timeline_model : "manages"
+    InvitationManagementService ..> Invitation_model : "manages"
+    WebsiteManagementService ..> EventWebsite_model : "manages"
+    BudgetManagementService ..> BudgetItem_model : "manages"
+
+    %% Facade Pattern Dependencies
+    EventPlanningFacade ..> EventManagementService : "uses"
+    EventPlanningFacade ..> TodoManagementService : "uses"
+    EventPlanningFacade ..> TimelineManagementService : "uses"
+    EventPlanningFacade ..> InvitationManagementService : "uses"
+    EventPlanningFacade ..> WebsiteManagementService : "uses"
+    EventPlanningFacade ..> BudgetManagementService : "uses"
+
+    %% =============== NOTES ===============
+    note for EventPlanningFacade "Facade pattern for coordinating all event planning operations"
+    note for EventManagementService "Core event lifecycle management"
+    note for TodoManagementService "Task management for event planning"
+    note for TimelineManagementService "Milestone and timeline tracking"
+    note for InvitationManagementService "Guest invitation and RSVP management"
+    note for WebsiteManagementService "Event website creation and management"
+    note for BudgetManagementService "Financial planning and expense tracking" 

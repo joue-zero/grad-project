@@ -1,3 +1,4 @@
+%%{ init: { 'theme': 'base', 'flowchart': { 'fontSize': 25 }, 'themeVariables': { 'primaryColor': '#CEE7FF', 'secondaryColor': '#FFE5B4', 'tertiaryColor': '#E2F0CB', 'primaryTextColor': '#000000' } } }%%
 flowchart TD
     Start(["System receives booking request"]) --> ReceiveSearch["Receive search criteria (location, date, capacity)"]
     ReceiveSearch --> SearchVenues["Search venue database"]
@@ -28,5 +29,10 @@ flowchart TD
     n1@{ shape: anchor}
     style Start fill:#90EE90
     style Success fill:#90EE90      
+
+classDef success fill:#A1D99B,stroke:#2E8540,color:#000000
+classDef error fill:#FBB,stroke:#AA0000,color:#000000
+class Start,Success success
+class PaymentError,EventsNotFound error
 
 

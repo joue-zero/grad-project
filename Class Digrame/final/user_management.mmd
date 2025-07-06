@@ -1,0 +1,86 @@
+classDiagram
+    direction TB
+    
+    %% =============== PART 2A: USER MANAGEMENT MODULE ===============
+
+    %% -------------- User Model (Database Entity) --------------
+    class User_model {
+        +id : integer
+        +name : string
+        +email : string
+        +password : string
+        +phone : string
+        +user_type : enum
+        +is_active : boolean
+        +email_verified_at : timestamp
+        +remember_token : string
+        +created_at : timestamp
+        +updated_at : timestamp
+        +hasRole(role) : boolean
+        +isVendor() : boolean
+        +isCustomer() : boolean
+        +isAdmin() : boolean
+    }
+
+    %% -------------- Role-Based Service Layer --------------
+    class CustomerService {
+        +register(customerData)
+        +getProfile(customerId)
+        +updateProfile(customerId, data)
+        +getEvents(customerId)
+        +getBookings(customerId)
+        +getDashboardData(customerId)
+        +deactivateAccount(customerId)
+    }
+
+    class VendorService {
+        +register(vendorData)
+        +getProfile(vendorId)
+        +updateProfile(vendorId, data)
+        +getServices(vendorId)
+        +getBookings(vendorId)
+        +getEarnings(vendorId)
+        +getReviews(vendorId)
+        +getDashboardData(vendorId)
+        +updateServiceStatus(vendorId, serviceId, status)
+    }
+
+    class AdminService {
+        +getProfile(adminId)
+        +updateProfile(adminId, data)
+        +getAllUsers()
+        +getAllBookings()
+        +getAllPayments()
+        +getReports()
+        +getDashboardData(adminId)
+        +approveVendor(vendorId)
+        +suspendUser(userId)
+        +generateReport(type, dateRange)
+    }
+
+    %% -------------- Authentication Service --------------
+    class AuthenticationService {
+        +login(credentials)
+        +register(userData, role)
+        +logout(userId)
+        +refreshToken(token)
+        +forgotPassword(email)
+        +resetPassword(token, newPassword)
+        +verifyEmail(token)
+        +changePassword(userId, oldPassword, newPassword)
+    }
+
+    %% =============== RELATIONSHIPS ===============
+
+    %% Service Dependencies on User Model
+    CustomerService ..> User_model : "manages"
+    VendorService ..> User_model : "manages"
+    AdminService ..> User_model : "manages"
+    AuthenticationService ..> User_model : "authenticates"
+
+    %% =============== NOTES ===============
+    note for User_model "Core user entity with role-based access"
+    note for CustomerService "Handles customer-specific operations"
+    note for VendorService "Manages vendor business operations"
+    note for AdminService "Administrative operations and system management"
+    note for AuthenticationService "Handles authentication and authorization" 

@@ -1,0 +1,275 @@
+classDiagram
+    direction TB
+    
+    %% =============== ADDON & PACKAGE SYSTEM ===============
+
+    %% -------------- Core References (External Models) --------------
+    class Service_model {
+        +id : integer
+        +name : string
+        +base_price : decimal
+        +service_type : string
+    }
+
+    class Event_model {
+        +id : integer
+        +user_id : foreignId
+        +name : string
+        +date : date
+    }
+
+    class Booking_model {
+        +id : integer
+        +user_id : foreignId
+        +event_id : foreignId
+        +total_amount : decimal
+        +status : enum
+    }
+
+    %% -------------- AddOn & Package Models (Database Entities) --------------
+    class AddOn_model {
+        +id : integer
+        +service_id : foreignId
+        +name : string
+        +description : text
+        +price : decimal
+        +addon_type : enum
+        +is_available : boolean
+        +requires_booking : boolean
+        +max_quantity : integer
+        +setup_time : integer
+        +category : string
+        +image_url : string
+        +created_at : timestamp
+        +updated_at : timestamp
+        +calculateTotalPrice(quantity)
+        +checkAvailability(date)
+    }
+
+    class Package_model {
+        +id : integer
+        +name : string
+        +description : text
+        +package_type : enum
+        +base_price : decimal
+        +discount_percentage : decimal
+        +is_active : boolean
+        +min_event_size : integer
+        +max_event_size : integer
+        +valid_from : date
+        +valid_until : date
+        +terms_conditions : text
+        +image_url : string
+        +created_at : timestamp
+        +updated_at : timestamp
+        +calculateDiscountedPrice()
+        +isValidForEvent(eventData)
+    }
+
+    class PackageItem_model {
+        +id : integer
+        +package_id : foreignId
+        +service_id : foreignId
+        +addon_id : foreignId
+        +quantity : integer
+        +custom_price : decimal
+        +is_optional : boolean
+        +sort_order : integer
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class BookingAddOn_model {
+        +id : integer
+        +booking_id : foreignId
+        +addon_id : foreignId
+        +quantity : integer
+        +unit_price : decimal
+        +total_price : decimal
+        +special_instructions : text
+        +setup_date : date
+        +setup_time : time
+        +status : enum
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class BookingPackage_model {
+        +id : integer
+        +booking_id : foreignId
+        +package_id : foreignId
+        +final_price : decimal
+        +discount_applied : decimal
+        +customizations : json
+        +package_status : enum
+        +applied_at : timestamp
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    class AddOnCategory_model {
+        +id : integer
+        +name : string
+        +description : text
+        +icon : string
+        +sort_order : integer
+        +is_active : boolean
+        +created_at : timestamp
+        +updated_at : timestamp
+    }
+
+    %% -------------- Service Layer Classes --------------
+    class AddOnManagementService {
+        +createAddOn(serviceId, addOnData)
+        +updateAddOn(addOnId, data)
+        +deleteAddOn(addOnId)
+        +getAddOn(addOnId)
+        +getServiceAddOns(serviceId)
+        +getAddOnsByCategory(categoryId)
+        +checkAddOnAvailability(addOnId, date, quantity)
+        +calculateAddOnPrice(addOnId, quantity)
+        +getPopularAddOns()
+        +searchAddOns(criteria)
+    }
+
+    class PackageManagementService {
+        +createPackage(packageData)
+        +updatePackage(packageId, data)
+        +deletePackage(packageId)
+        +getPackage(packageId)
+        +getAllPackages()
+        +getActivePackages()
+        +addItemToPackage(packageId, itemData)
+        +removeItemFromPackage(packageId, itemId)
+        +calculatePackagePrice(packageId, eventData)
+        +validatePackageForEvent(packageId, eventData)
+        +getPackagesByEventSize(eventSize)
+    }
+
+    class BookingAddOnService {
+        +addAddOnToBooking(bookingId, addOnId, quantity)
+        +removeAddOnFromBooking(bookingId, addOnId)
+        +updateBookingAddOn(bookingAddOnId, data)
+        +getBookingAddOns(bookingId)
+        +calculateBookingAddOnTotal(bookingId)
+        +scheduleAddOnSetup(bookingAddOnId, setupDetails)
+        +updateAddOnStatus(bookingAddOnId, status)
+    }
+
+    class BookingPackageService {
+        +applyPackageToBooking(bookingId, packageId, customizations)
+        +removePackageFromBooking(bookingId, packageId)
+        +updateBookingPackage(bookingPackageId, data)
+        +getBookingPackages(bookingId)
+        +calculatePackageDiscount(bookingId, packageId)
+        +validatePackageCompatibility(bookingId, packageId)
+    }
+
+    %% -------------- Decorator Pattern for AddOns --------------
+    class ServiceDecorator {
+        <<abstract>>
+        +service : Service_model
+        +calculatePrice()
+        +getDescription()
+    }
+
+    class LightingAddOnDecorator {
+        +calculatePrice()
+        +getDescription()
+        +setupLighting()
+    }
+
+    class CateringAddOnDecorator {
+        +calculatePrice()
+        +getDescription()
+        +setupCatering()
+    }
+
+    class PhotographyAddOnDecorator {
+        +calculatePrice()
+        +getDescription()
+        +schedulePhotography()
+    }
+
+    %% -------------- MVC Controllers --------------
+    class AddOnController {
+        +index() : JsonResponse
+        +show(id) : JsonResponse
+        +store(request) : JsonResponse
+        +update(id, request) : JsonResponse
+        +destroy(id) : JsonResponse
+        +byService(serviceId) : JsonResponse
+        +byCategory(categoryId) : JsonResponse
+        +search(request) : JsonResponse
+        +availability(id, request) : JsonResponse
+    }
+
+    class PackageController {
+        +index() : JsonResponse
+        +show(id) : JsonResponse
+        +store(request) : JsonResponse
+        +update(id, request) : JsonResponse
+        +destroy(id) : JsonResponse
+        +active() : JsonResponse
+        +byEventSize(request) : JsonResponse
+        +calculate(id, request) : JsonResponse
+        +validate(id, request) : JsonResponse
+    }
+
+    class BookingAddOnController {
+        +index(bookingId) : JsonResponse
+        +store(request) : JsonResponse
+        +update(id, request) : JsonResponse
+        +destroy(bookingId, addOnId) : JsonResponse
+        +schedule(id, request) : JsonResponse
+        +updateStatus(id, request) : JsonResponse
+    }
+
+    class BookingPackageController {
+        +index(bookingId) : JsonResponse
+        +apply(request) : JsonResponse
+        +remove(bookingId, packageId) : JsonResponse
+        +update(id, request) : JsonResponse
+        +calculateDiscount(bookingId, packageId) : JsonResponse
+    }
+
+    %% =============== RELATIONSHIPS ===============
+
+    %% Model Relationships
+    Service_model "1" --> "*" AddOn_model : "has many"
+    Package_model "1" --> "*" PackageItem_model : "contains"
+    PackageItem_model --> Service_model : "references"
+    PackageItem_model --> AddOn_model : "references"
+    Booking_model "1" --> "*" BookingAddOn_model : "has many"
+    Booking_model "1" --> "*" BookingPackage_model : "has many"
+    BookingAddOn_model --> AddOn_model : "references"
+    BookingPackage_model --> Package_model : "references"
+    AddOn_model --> AddOnCategory_model : "belongs to"
+
+    %% Service Layer Dependencies
+    AddOnManagementService ..> AddOn_model : "manages"
+    AddOnManagementService ..> AddOnCategory_model : "manages"
+    PackageManagementService ..> Package_model : "manages"
+    PackageManagementService ..> PackageItem_model : "manages"
+    BookingAddOnService ..> BookingAddOn_model : "manages"
+    BookingPackageService ..> BookingPackage_model : "manages"
+
+    %% Decorator Pattern Relationships
+    ServiceDecorator ..> Service_model : "decorates"
+    ServiceDecorator <|-- LightingAddOnDecorator : "extends"
+    ServiceDecorator <|-- CateringAddOnDecorator : "extends"
+    ServiceDecorator <|-- PhotographyAddOnDecorator : "extends"
+
+    %% Controller Dependencies (Controller → Service ONLY)
+    AddOnController ..> AddOnManagementService : "uses"
+    PackageController ..> PackageManagementService : "uses"
+    BookingAddOnController ..> BookingAddOnService : "uses"
+    BookingPackageController ..> BookingPackageService : "uses"
+
+    %% =============== NOTES ===============
+    note for AddOn_model "Additional services that extend base services"
+    note for Package_model "Bundled services with discounts"
+    note for ServiceDecorator "Decorator pattern for dynamic service enhancement"
+    note for BookingAddOn_model "AddOns applied to specific bookings"
+    note for BookingPackage_model "Packages applied to specific bookings"
+    note for PackageItem_model "Items included in packages (services or addons)" 
