@@ -6,16 +6,14 @@ flowchart TD
     HasResults -- No --> NoResults["Display No results found"]
     HasResults -- Yes --> DisplayVenues["Display venue list"]
     DisplayVenues --> ReceiveSelection["Receive venue selection"]
-    ReceiveSelection --> CheckAvailability["Check venue availability"]
-    CheckAvailability --> IsAvailable{"Available?"}
-    IsAvailable -- No --> DisplayAlternatives["Display alternative dates"]
-    IsAvailable -- Yes --> ReceiveAddToCart["Receive add to cart request"]
+    ReceiveSelection --> ReceiveAddToCart["Receive add to cart request"]
     ReceiveAddToCart --> CheckCustomerEvents["Check customer events"]
     CheckCustomerEvents --> HasEvents{"Events exist?"}
-    HasEvents -- No --> EventsNotFound["Display Events not found"]
+    HasEvents -- No --> CreateNewEvent["Create new event automatically"]
     HasEvents -- Yes --> DisplayEventOptions["Display events"]
     DisplayEventOptions --> ReceiveEventChoice["Receive event choice"]
     ReceiveEventChoice --> LinkToEvent["Link venue to event"]
+    CreateNewEvent --> LinkToEvent
     LinkToEvent --> AddToCart["Add venue to cart"]
     AddToCart --> DisplayCart["Display cart"]
     DisplayCart --> ProcessPayment
@@ -34,6 +32,6 @@ classDef default fill:#FFFFFF,stroke:#000000,color:#000000,font-weight:bold,font
 classDef success fill:#A1D99B,stroke:#2E8540,color:#000000,font-weight:bold,font-size:30px
 classDef error fill:#FBB,stroke:#AA0000,color:#000000,font-weight:bold,font-size:30px
 class Start,Success success
-class PaymentError,EventsNotFound error
+class PaymentError error
 
 

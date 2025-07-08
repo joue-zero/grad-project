@@ -1,3 +1,4 @@
+%%{ init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#CEE7FF', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'secondaryColor': '#FFE5B4', 'tertiaryColor': '#E2F0CB', 'background': '#ffffff', 'mainBkg': '#ffffff', 'secondBkg': '#FFE5B4', 'tertiaryBkg': '#E2F0CB' }, 'sequence': { 'actorFontSize': '24px', 'actorFontFamily': 'Arial', 'actorFontWeight': 'bold', 'noteFontSize': '20px', 'noteFontFamily': 'Arial', 'noteFontWeight': 'bold', 'noteTextColor': '#000000', 'messageFontSize': '20px', 'messageFontFamily': 'Arial', 'messageFontWeight': 'bold' } } }%%
 sequenceDiagram
     participant UI as Frontend UI
     participant API as Backend API
@@ -15,44 +16,36 @@ sequenceDiagram
         Note over UI,DB: Found Results Flow
         API-->>UI: Display venue list
         UI->>API: Receive venue selection (venue_id)
-        API->>DB: Check venue availability (venue_id, date)
-        DB-->>API: Return availability status
+        API-->>UI: Receive add to cart request (venue_id, date)
+        API->>DB: Check customer events (customer_id)
+        DB-->>API: Return events status
         
-        alt Available
-            Note over UI,Payment: Available Venue Flow
-            API-->>UI: Receive add to cart request (venue_id, date)
-            API->>DB: Check customer events (customer_id)
-            DB-->>API: Return events status
-            
-            alt Events exist
-                Note over UI,DB: Existing Events Flow
-                API-->>UI: Display events
-                UI->>API: Receive event choice (event_id)
-                API->>DB: Link venue to event (venue_id, event_id)
-            else Events not found
-                Note over UI,UI: No Events Flow
-                API-->>UI: Display Events not found
-            end
-            
-            DB-->>API: Venue linked
-            API-->>UI: Display cart
-            UI->>API: Process payment (total_amount)
-            API->>Payment: Process payment (amount, customer_id)
-            Payment-->>API: Return payment result
-            
-            alt Payment successful
-                Note over API,Notification: Success Flow
-                API->>DB: Confirm all bookings (booking_ids)
-                API->>Notification: Send confirmations (customer_email, booking_details)
-                API-->>UI: Booking complete
-            else Payment error
-                Note over API,UI: Error Flow
-                API-->>UI: Display Payment error
-            end
-            
-        else Not available
-            Note over API,UI: Unavailable Flow
-            API-->>UI: Display alternative dates
+        alt Events exist
+            Note over UI,DB: Existing Events Flow
+            API-->>UI: Display events
+            UI->>API: Receive event choice (event_id)
+            API->>DB: Link venue to event (venue_id, event_id)
+        else Events not found
+            Note over UI,DB: Auto-Create Event Flow
+            API->>DB: Create new event (customer_id, venue_date)
+            DB-->>API: Return new event_id
+            API->>DB: Link venue to event (venue_id, event_id)
+        end
+        
+        DB-->>API: Venue linked
+        API-->>UI: Display cart
+        UI->>API: Process payment (total_amount)
+        API->>Payment: Process payment (amount, customer_id)
+        Payment-->>API: Return payment result
+        
+        alt Payment successful
+            Note over API,Notification: Success Flow
+            API->>DB: Confirm all bookings (booking_ids)
+            API->>Notification: Send confirmations (customer_email, booking_details)
+            API-->>UI: Booking complete
+        else Payment error
+            Note over API,UI: Error Flow
+            API-->>UI: Display Payment error
         end
         
     else No results
